@@ -108,6 +108,44 @@ class OneX
             foreach ($xml->DATA as $line) {
                 $rs->addRecord($this->parseRecordFromLine($rets, $xml, $parameters, $line, $rs));
             }
+        } elseif (isset($xml->{'RETS-RESPONSE'})) {
+            $obj = json_decode(json_encode($xml->{'RETS-RESPONSE'}), true);
+            if (count(array_keys($obj)) > 1) {
+                foreach ($obj[array_keys($obj)[1]] as $record) {
+                    $rs->addRecord($this->parseRecordFromXml($rets, $xml, $parameters, $record, $rs));
+                }
+            }
+        }
+    }
+
+    protected function parseRecordFromXml(Session $rets, &$xml, $parameters, &$record, Results $rs)
+    {
+        $r = new Record;
+
+        $this->flattenAttributes($record);
+
+        foreach($record as $k => $v) {
+            $r->set($k, $v);
+        }
+
+        return $r;
+    }
+
+    protected function flattenAttributes(array &$tree)
+    {
+        foreach(array_keys($tree) as $k) {
+            if ($k === "@attributes") {
+                foreach($tree[$k] as $ak => $av) {
+                    $tree[$ak] = $av;
+                }
+                unset($tree[$k]);
+            } elseif (is_array($tree[$k])) {
+                $this->flattenAttributes($tree[$k]);
+                # deal with instance where only 1 object exists, it isn't treated as an array
+                if ($k === "PropertyPhoto" && array_key_exists("LastUpdated", $tree[$k])) {
+                    $tree[$k] = [$tree[$k]];
+                }
+            }
         }
     }
 

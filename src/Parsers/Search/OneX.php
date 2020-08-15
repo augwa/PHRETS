@@ -111,14 +111,15 @@ class OneX
         } elseif (isset($xml->{'RETS-RESPONSE'})) {
             $obj = json_decode(json_encode($xml->{'RETS-RESPONSE'}), true);
             if (count(array_keys($obj)) > 1) {
-                if (array_key_exists(0, $obj[array_keys($obj)[1]])) {
-                    foreach ($obj[array_keys($obj)[1]] as $record) {
+                $secondKey = array_keys($obj)[1];
+                if (array_key_exists(0, $obj[$secondKey])) {
+                    foreach ($obj[$secondKey] as $record) {
                         $rs->addRecord($this->parseRecordFromXml($rets, $xml, $parameters, $record, $rs));
                     }
                 } else {
                     # whoever thought of returning a single object instead of an array of objects when
                     # only 1 item in the list exists should be shot.
-                    $rs->addRecord($this->parseRecordFromXml($rets, $xml, $parameters, $obj, $rs));
+                    $rs->addRecord($this->parseRecordFromXml($rets, $xml, $parameters, $obj[$secondKey], $rs));
                 }
             }
         }
